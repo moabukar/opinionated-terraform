@@ -1,12 +1,11 @@
-# Default
-* @coderco/platform
+# Default owners
+*       @coderco/platform
 
 # Modules
-/modules/vpc/ @coderco/networks
-/modules/ecr/ @coderco/containers
-/modules/rds/ @coderco/data
-/modules/eks/ @coderco/kubernetes
+/modules/vpc/        @coderco/networking
+/modules/ecr/        @coderco/platform
+/modules/rds/        @coderco/data
+/modules/eks/        @coderco/kubernetes
 
 # Stacks
-/stacks/prod/ @coderco/platform-leads
-    
+/stacks/prod/        @coderco/platform @coderco/security

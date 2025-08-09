@@ -1,0 +1,20 @@
+version: "3.8"
+services:
+  localstack:
+    image: localstack/localstack:latest
+    container_name: localstack
+    environment:
+      - SERVICES=s3,dynamodb,sts,iam,ecr,ec2,logs,cloudwatch,kms
+      - DEBUG=1
+      - PERSISTENCE=1
+      - AWS_DEFAULT_REGION=eu-west-2
+      - LS_LOG=trace
+    ports:
+      - "4566:4566"
+      - "4510-4559:4510-4559"
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./init:/etc/localstack/init/ready.d
+volumes:
+  localstack_data:
