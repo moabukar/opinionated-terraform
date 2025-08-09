@@ -45,9 +45,9 @@ resource "aws_subnet" "public" {
 
 # NAT
 resource "aws_eip" "nat" {
-  count = var.nat_gateway_count
-  vpc   = true
-  tags  = merge(var.tags, { Name = "${var.name}-nat-eip-${count.index}" })
+  count  = var.nat_gateway_count
+  domain = "vpc"
+  tags   = merge(var.tags, { Name = "${var.name}-nat-eip-${count.index}" })
 }
 
 resource "aws_nat_gateway" "this" {

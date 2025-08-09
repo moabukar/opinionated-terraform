@@ -1,7 +1,4 @@
-[![CI](https://github.com/coderco/terraform-aws-mono/actions/workflows/ci-pr.yml/badge.svg)](./.github/workflows/ci-pr.yml)
-[![Drift](https://github.com/coderco/terraform-aws-mono/actions/workflows/nightly-drift.yml/badge.svg)](./.github/workflows/nightly-drift.yml)
-[![Release](https://github.com/coderco/terraform-aws-mono/actions/workflows/release-please.yml/badge.svg)](./.github/workflows/release-please.yml)
-
+## WIP
 
 # Opinionated Terraform
 
