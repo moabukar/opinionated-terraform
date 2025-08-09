@@ -1,2 +1,21 @@
 .env
 .DS_Store
+
+.terraform.lock.hcl
+
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*
+
+# tf lock file
+.terraform.lock.hcl
+
+# Crash log files
+crash.log
+
+test/fixtures/shared/terraform.tfvars
+
+test/integration/gcloud/config.sh
+test/integration/tmp
