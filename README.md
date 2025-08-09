@@ -7,24 +7,28 @@
 
 This is an opinionated terraform repo style that I look at for reference when writing Terraform at scale. 
 
-Production-ready Terraform stacks for AWS: remote state in S3+DynamoDB, reusable modules (VPC/ECR/RDS/EKS), OIDC to AWS (no static keys), CI plans, nightly drift and LocalStack mode.
+Production-grade Terraform for AWS with **multi-environment stacks**, **reusable modules**, **GitHub OIDC (no static keys)**, **LocalStack first-class** and **policy + security** baked in.
 
 ## Quickstart
 
-### 0) Prereqs
-- Terraform ≥ 1.9
-- AWS CLI configured with admin to run bootstrap
-- Docker for LocalStack (optional)
-
-### 1) Bootstrap remote backends (per env)
-
 ```bash
-
+# 1) Bootstrap remote state (run once per env)
 cd tools/bootstrap-backend
 terraform init
-# Example for dev (eu-west-2)
 terraform apply -auto-approve -var="org=coderco" -var="env=dev" -var="region=eu-west-2"
-# Creates S3: tfstate-coderco-dev-eu-west-2 and DDB: tfstate-lock-coderco-dev
+terraform apply -auto-approve -var="org=coderco" -var="env=staging" -var="region=eu-west-2"
+terraform apply -auto-approve -var="org=coderco" -var="env=prod" -var="region=eu-west-2"
+
+# 2) Configure GitHub OIDC roles in AWS (see IAM JSON below)
+
+# 3) Repo setup
+pre-commit install
+
+# 4) Plan Dev
+make init plan ENV=dev
+
+# 5) Apply Dev (manually/local)
+make apply ENV=dev
 ```
 
 ### 2) Configure OIDC roles in AWS

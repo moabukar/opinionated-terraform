@@ -1,15 +1,30 @@
 module "vpc" {
-  source          = "../../modules/vpc"
-  name            = "dev"
-  cidr            = var.vpc_cidr
-  public_subnets  = ["10.0.0.0/24", "10.0.1.0/24", "10.0.2.0/24"]
-  private_subnets = ["10.0.10.0/24", "10.0.11.0/24", "10.0.12.0/24"]
-  nat_gateways    = 1
-  tags            = { Environment = "dev", Name = "dev", GitCommit = "" }
+  source                = "../../modules/vpc"
+  name                  = var.name_prefix
+  cidr                  = var.cidr
+  nat_gateway_count     = 1
+  create_public_subnets = true
+  tags = {
+    Name        = "${var.name_prefix}-vpc"
+    Environment = "dev"
+    Owner       = "platform@coderco.dev"
+    ManagedBy   = "Terraform"
+    Repo        = "coderco/infra"
+    GitCommit   = "unknown"
+    CostCenter  = "ENG-PLATFORM"
+  }
 }
 
 # module "ecr" {
 #   source = "../../modules/ecr"
-#   name   = "dev/app"
-#   tags   = { Environment = "dev", Name = "dev-app", GitCommit = "" }
+#   name   = "coderco/dev/app"
+#   tags = {
+#     Name        = "coderco-dev-ecr"
+#     Environment = "dev"
+#     Owner       = "platform@coderco.dev"
+#     ManagedBy   = "Terraform"
+#     Repo        = "coderco/infra"
+#     GitCommit   = "unknown"
+#     CostCenter  = "ENG-PLATFORM"
+#   }
 # }

@@ -2,9 +2,9 @@ provider "aws" {
   region                      = var.region
   access_key                  = "local"
   secret_key                  = "local"
-  s3_use_path_style           = true
   skip_credentials_validation = true
   skip_requesting_account_id  = true
+  s3_use_path_style           = true
 
   endpoints {
     s3         = var.localstack_endpoint
@@ -16,17 +16,20 @@ provider "aws" {
     logs       = var.localstack_endpoint
     cloudwatch = var.localstack_endpoint
     kms        = var.localstack_endpoint
+    # rds/eks are not used in local stack
   }
 
   default_tags {
     tags = {
-      Name        = "stacks-local"
-      Environment = "local"
       Owner       = "platform@coderco.dev"
-      CostCenter  = "ENG-PLATFORM"
       ManagedBy   = "Terraform"
-      Repo        = "coderco/terraform-aws-mono"
-      GitCommit   = ""
+      Repo        = "coderco/infra"
+      GitCommit   = "local"
+      CostCenter  = "ENG-PLATFORM"
+      Environment = "local"
     }
   }
 }
+
+data "aws_caller_identity" "current" {}
+data "aws_region" "current" {}

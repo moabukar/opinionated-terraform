@@ -1,15 +1,26 @@
 # VPC
 
-Creates a VPC with optional public subnets, private subnets, NAT gateways, SSM interface endpoints, and flow logs -> CloudWatch (KMS-encrypted).
+- 3 AZ private subnets
+- Optional public subnets
+- NAT gateways (configurable count)
+- Flow Logs to CloudWatch with KMS
+- SSM endpoints (ssm, ssmmessages, ec2messages)
 
 ## Example
 ```hcl
 module "vpc" {
-  source          = "../../"
-  name            = "demo"
-  cidr            = "10.0.0.0/16"
-  public_subnets  = ["10.0.0.0/24","10.0.1.0/24","10.0.2.0/24"]
-  private_subnets = ["10.0.10.0/24","10.0.11.0/24","10.0.12.0/24"]
-  nat_gateways    = 1
-  tags = { Environment = "dev", Name = "demo" }
+  source                 = "../../modules/vpc"
+  name                   = "coderco-dev"
+  cidr                   = "10.10.0.0/16"
+  nat_gateway_count      = 1
+  create_public_subnets  = true
+  tags = {
+    Name        = "coderco-dev"
+    Environment = "dev"
+    Owner       = "platform@coderco.dev"
+    ManagedBy   = "Terraform"
+    Repo        = "coderco/infra"
+    GitCommit   = "local"
+    CostCenter  = "ENG-PLATFORM"
+  }
 }

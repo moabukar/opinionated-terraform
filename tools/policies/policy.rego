@@ -1,26 +1,31 @@
-package terraform
+package terraform.security
 
 deny[msg] {
-  input.resource_type == "aws_s3_bucket_public_access_block"
-  not input.body.block_public_acls
-  msg := "S3 public access must be blocked"
+  input.resource_type == "aws_s3_bucket"
+  public := input.values.acl
+  public == "public-read" or public == "public-read-write"
+  msg := sprintf("S3 bucket %s should not be public", [input.address])
 }
 
 deny[msg] {
   input.resource_type == "aws_s3_bucket"
-  not input.has_sse
-  msg := "S3 buckets must enable encryption"
+  not input.values.server_side_encryption_configuration
+  msg := sprintf("S3 bucket %s must enable encryption", [input.address])
 }
 
 deny[msg] {
   input.resource_type == "aws_db_instance"
-  not input.body.storage_encrypted
-  msg := "RDS storage_encrypted must be true"
+  not input.values.storage_encrypted
+  msg := sprintf("RDS %s must have storage_encrypted = true", [input.address])
 }
 
+# Required tags on all taggable resources
+required_tags := {"Name", "Environment", "Owner", "CostCenter", "ManagedBy", "Repo", "GitCommit"}
+
 deny[msg] {
-  required := {"Name","Environment","Owner","CostCenter","ManagedBy","Repo","GitCommit"}
-  missing := required - input.tags_set
-  count(missing) > 0
-  msg := sprintf("Missing required tags: %v", [missing])
+  input.values.tags
+  some t
+  t := required_tags[_]
+  not input.values.tags[t]
+  msg := sprintf("Resource %s missing required tag %s", [input.address, t])
 }
