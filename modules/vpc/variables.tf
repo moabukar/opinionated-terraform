@@ -17,6 +17,11 @@ variable "nat_gateway_count" {
   type    = number
   default = 1
 }
+variable "enable_flow_logs" {
+  description = "Enable VPC flow logs and supporting resources (KMS, IAM, CloudWatch)"
+  type        = bool
+  default     = false
+}
 variable "tags" {
   type    = map(string)
   default = {}
