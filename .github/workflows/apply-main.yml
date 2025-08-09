@@ -1,0 +1,47 @@
+name: apply-main
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "stacks/**"
+      - "modules/**"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Which environment to apply (dev|staging|prod)"
+        required: true
+        default: "dev"
+        type: choice
+        options: [dev, staging, prod]
+
+permissions:
+  id-token: write
+  contents: read
+  deployments: write
+
+env:
+  DEFAULT_REGION: eu-west-2
+
+jobs:
+  apply:
+    name: Apply ${{ inputs.environment || 'dev' }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment || 'dev' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: "1.9.5" }
+      - name: Configure AWS (OIDC apply-role)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/github-oidc-apply-role
+          role-session-name: gha-apply
+          aws-region: ${{ env.DEFAULT_REGION }}
+      - name: Terraform apply
+        working-directory: stacks/${{ inputs.environment || 'dev' }}
+        env:
+          TF_VAR_environment: ${{ inputs.environment || 'dev' }}
+        run: |
+          terraform init -input=false
+          terraform apply -auto-approve

@@ -1,0 +1,2 @@
+skip-check:
+  - CKV_AWS_364  # Example justified skip if using VPC endpoints for SSM only; IGW allowed for public subnets

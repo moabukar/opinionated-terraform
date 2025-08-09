@@ -1,0 +1,23 @@
+version: '3'
+vars:
+  ENV: '{{.ENV | default "dev"}}'
+  REGION: '{{.REGION | default "eu-west-2"}}'
+tasks:
+  init:
+    cmds:
+      - (cd stacks/{{.ENV}} && terraform init -input=false)
+  plan:
+    cmds:
+      - (cd stacks/{{.ENV}} && terraform plan -input=false -out=plan.out)
+  apply:
+    cmds:
+      - (cd stacks/{{.ENV}} && terraform apply -auto-approve)
+  lint:
+    cmds:
+      - pre-commit run -a || true
+  ls:up:
+    dir: localstack
+    cmds: ["docker compose up -d"]
+  ls:down:
+    dir: localstack
+    cmds: ["docker compose down -v"]

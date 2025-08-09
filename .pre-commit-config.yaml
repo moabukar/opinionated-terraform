@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/antonbabenko/pre-commit-terraform
+    rev: v1.92.0
+    hooks:
+      - id: terraform_fmt
+      - id: terraform_validate
+      - id: terraform_tflint
+      - id: terraform_tfsec
+      - id: terraform_checkov
+      - id: terraform_docs
+        args:
+          - --config=.terraform-docs.yml
+  - repo: https://github.com/zricethezav/gitleaks
+    rev: v8.18.1
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+  - repo: https://github.com/conventional-changelog/commitlint
+    rev: v18.6.1
+    hooks:
+      - id: commitlint
+        additional_dependencies: ["@commitlint/config-conventional"]

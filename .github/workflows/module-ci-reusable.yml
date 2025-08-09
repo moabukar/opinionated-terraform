@@ -1,0 +1,25 @@
+name: module-ci-reusable
+on:
+  push:
+    paths:
+      - "modules/**"
+  pull_request:
+    paths:
+      - "modules/**"
+
+jobs:
+  module-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: "1.9.5" }
+      - name: Install tooling
+        run: |
+          pipx install pre-commit
+          curl -sSL https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          curl -sSL https://github.com/terraform-docs/terraform-docs/releases/download/v0.19.0/terraform-docs-v0.19.0-linux-amd64.tar.gz | tar -xz -C /usr/local/bin terraform-docs
+          curl -sSL https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64 -o /usr/local/bin/tfsec && chmod +x /usr/local/bin/tfsec
+          curl -sSL https://github.com/bridgecrewio/checkov/releases/latest/download/checkov_2_Linux_x86_64 -o /usr/local/bin/checkov && chmod +x /usr/local/bin/checkov
+      - name: pre-commit
+        run: pre-commit run --all-files

@@ -1,0 +1,166 @@
+name: ci-pr
+
+on:
+  pull_request:
+    branches: ["**"]
+    paths:
+      - "stacks/**"
+      - "modules/**"
+      - "tools/**"
+      - ".github/**"
+      - "ci/**"
+      - ".pre-commit-config.yaml"
+      - "Taskfile.yml"
+      - "Makefile"
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+env:
+  ORG: coderco
+  DEFAULT_REGION: eu-west-2
+
+jobs:
+  precommit:
+    name: pre-commit / lint / security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+      - name: Install tools
+        run: |
+          pipx install pre-commit detect-secrets
+          curl -sSL https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+          curl -sSL https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-linux-amd64 -o /usr/local/bin/tfsec && chmod +x /usr/local/bin/tfsec
+          curl -sSL https://github.com/bridgecrewio/checkov/releases/latest/download/checkov_2_Linux_x86_64 -o /usr/local/bin/checkov && chmod +x /usr/local/bin/checkov
+          curl -sSL https://github.com/terraform-docs/terraform-docs/releases/download/v0.19.0/terraform-docs-v0.19.0-linux-amd64.tar.gz | tar -xz -C /usr/local/bin terraform-docs
+      - name: Pre-commit run
+        run: pre-commit run --all-files
+
+  localstack-validate:
+    name: LocalStack plan + Terratest
+    runs-on: ubuntu-latest
+    services:
+      localstack:
+        image: localstack/localstack:latest
+        ports: ["4566:4566","4510-4559:4510-4559"]
+        env:
+          SERVICES: s3,dynamodb,sts,iam,ecr,ec2,logs,cloudwatch,kms
+          DEBUG: "1"
+          PERSISTENCE: "1"
+          AWS_DEFAULT_REGION: ${{ env.DEFAULT_REGION }}
+        options: >-
+          --health-cmd="curl -s http://localhost:4566/health | jq -e '. | .services | to_entries | map(.value==\"running\") | all'"
+          --health-interval=10s --health-timeout=5s --health-retries=20
+    env:
+      AWS_ACCESS_KEY_ID: local
+      AWS_SECRET_ACCESS_KEY: local
+      AWS_DEFAULT_REGION: ${{ env.DEFAULT_REGION }}
+      LST_ENDPOINT: http://localhost:4566
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+      - name: Init/Plan (stacks/local)
+        working-directory: stacks/local
+        run: |
+          terraform init -input=false
+          terraform validate
+          terraform plan -input=false -out=plan.out
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with: { go-version: "1.22" }
+      - name: Terratest (LocalStack)
+        env:
+          TEST_PROVIDER: localstack
+          AWS_ACCESS_KEY_ID: local
+          AWS_SECRET_ACCESS_KEY: local
+          AWS_DEFAULT_REGION: ${{ env.DEFAULT_REGION }}
+          AWS_ENDPOINT_URL: ${{ env.LST_ENDPOINT }}
+        run: |
+          cd test
+          go test -v -timeout 45m ./...
+
+  plan:
+    name: Terraform plan (changed envs)
+    runs-on: ubuntu-latest
+    needs: [precommit]
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    outputs:
+      changed_envs: ${{ steps.detect.outputs.changed_envs }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: detect
+        name: Detect env changes
+        run: |
+          set -e
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...${{ github.sha }} | grep '^stacks/' || true)
+          ENVS=""
+          for e in dev staging prod; do
+            if echo "$CHANGED" | grep -q "^stacks/$e/"; then ENVS="$ENVS $e"; fi
+          done
+          echo "changed_envs=${ENVS:-dev staging prod}" >> $GITHUB_OUTPUT
+      - name: Set matrix
+        id: matrix
+        run: echo "matrix=$(jq -cn --arg s '${{ steps.detect.outputs.changed_envs }}' '{envs:($s|split(\" \")|map(select(length>0)))}')" >> $GITHUB_OUTPUT
+
+  plan-matrix:
+    needs: plan
+    if: ${{ needs.plan.outputs.changed_envs != '' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.plan.steps.matrix.outputs.matrix) }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.5"
+      - name: Configure AWS (OIDC plan-role)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/github-oidc-plan-role
+          role-session-name: gha-plan
+          aws-region: ${{ env.DEFAULT_REGION }}
+      - name: Terraform init/plan
+        working-directory: stacks/${{ matrix.envs }}
+        env:
+          TF_VAR_environment: ${{ matrix.envs }}
+        run: |
+          terraform init -input=false
+          terraform validate
+          terraform plan -input=false -out=plan.out
+      - name: Upload plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: plan-${{ matrix.envs }}
+          path: stacks/${{ matrix.envs }}/plan.out
+
+  infracost:
+    name: Infracost PR comment
+    runs-on: ubuntu-latest
+    needs: [plan]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: infracost/actions/setup@v3
+      - name: Infracost diff
+        uses: infracost/actions/comment@v3
+        with:
+          path: ci/infracost.yml
+          behavior: update
+        env:
+          INFRACOST_API_KEY: ${{ secrets.INFRACOST_API_KEY }}

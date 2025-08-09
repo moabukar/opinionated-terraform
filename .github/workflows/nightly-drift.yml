@@ -1,0 +1,45 @@
+name: nightly-drift
+on:
+  schedule:
+    - cron: "17 1 * * *"  # 01:17 UTC daily
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+
+env:
+  DEFAULT_REGION: eu-west-2
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        env: [dev, staging, prod]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: "1.9.5" }
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/github-oidc-plan-role
+          role-session-name: gha-drift
+          aws-region: ${{ env.DEFAULT_REGION }}
+      - name: Plan with detailed exit code
+        id: plan
+        working-directory: stacks/${{ matrix.env }}
+        continue-on-error: true
+        run: |
+          terraform init -input=false
+          terraform plan -detailed-exitcode -input=false -out=plan.out
+          echo "exitcode=$?" >> $GITHUB_OUTPUT
+      - name: Open/Update issue if drift
+        if: steps.plan.outputs.exitcode == '2'
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "Drift detected in ${{ matrix.env }}"
+          content-filepath: stacks/${{ matrix.env }}/plan.out
+          labels: drift, ${{ matrix.env }}
+          update-existing: true
+          search-existing: "Drift detected in ${{ matrix.env }}"

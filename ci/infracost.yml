@@ -1,0 +1,8 @@
+version: "0.1"
+projects:
+  - path: stacks/dev
+    name: dev
+  - path: stacks/staging
+    name: staging
+  - path: stacks/prod
+    name: prod

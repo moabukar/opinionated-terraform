@@ -1,0 +1,23 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      { "Sid": "StateAccess", "Effect": "Allow",
+        "Action": ["s3:Get*", "s3:List*"],
+        "Resource": [
+          "arn:aws:s3:::tfstate-coderco-*-eu-west-2",
+          "arn:aws:s3:::tfstate-coderco-*-eu-west-2/*"
+        ]
+      },
+      { "Sid": "LockTable", "Effect": "Allow",
+        "Action": ["dynamodb:GetItem","dynamodb:PutItem","dynamodb:DeleteItem","dynamodb:Query","dynamodb:Scan","dynamodb:DescribeTable"],
+        "Resource": "arn:aws:dynamodb:eu-west-2:*:table/tfstate-lock-coderco-*"
+      },
+      { "Sid": "Describe", "Effect": "Allow",
+        "Action": [
+          "ec2:Describe*","iam:GetRole","iam:ListRolePolicies","ecr:Describe*","eks:Describe*","rds:Describe*",
+          "logs:Describe*","kms:DescribeKey","kms:ListKeys","cloudwatch:Describe*","elasticloadbalancing:Describe*"
+        ],
+        "Resource": "*"
+      }
+    ]
+  }

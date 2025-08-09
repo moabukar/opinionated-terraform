@@ -1,0 +1,12 @@
+# Default
+* @coderco/platform
+
+# Modules
+/modules/vpc/ @coderco/networks
+/modules/ecr/ @coderco/containers
+/modules/rds/ @coderco/data
+/modules/eks/ @coderco/kubernetes
+
+# Stacks
+/stacks/prod/ @coderco/platform-leads
+    

@@ -1,0 +1,37 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      { "Sid": "StateAccess", "Effect": "Allow",
+        "Action": ["s3:Get*","s3:List*","s3:PutObject","s3:DeleteObject"],
+        "Resource": [
+          "arn:aws:s3:::tfstate-coderco-*-eu-west-2",
+          "arn:aws:s3:::tfstate-coderco-*-eu-west-2/*"
+        ]
+      },
+      { "Sid": "LockTable", "Effect": "Allow",
+        "Action": ["dynamodb:*"],
+        "Resource": "arn:aws:dynamodb:eu-west-2:*:table/tfstate-lock-coderco-*"
+      },
+      { "Sid": "VpcCore", "Effect": "Allow",
+        "Action": ["ec2:*Vpc*","ec2:*Subnet*","ec2:*Route*","ec2:*InternetGateway*","ec2:*NatGateway*","ec2:*SecurityGroup*","ec2:*VpcEndpoint*","ec2:CreateTags","ec2:DeleteTags","ec2:ModifyVpcAttribute"],
+        "Resource": "*"
+      },
+      { "Sid": "Ecr", "Effect": "Allow",
+        "Action": ["ecr:CreateRepository","ecr:DeleteRepository","ecr:PutLifecyclePolicy","ecr:PutImageTagMutability","ecr:PutImageScanningConfiguration","ecr:Describe*","ecr:SetRepositoryPolicy"],
+        "Resource": "arn:aws:ecr:eu-west-2:*:repository/*"
+      },
+      { "Sid": "Rds", "Effect": "Allow",
+        "Action": ["rds:*DBSubnetGroup*","rds:*DBParameterGroup*","rds:*DBInstance*","rds:ListTagsForResource","rds:AddTagsToResource","rds:RemoveTagsFromResource"],
+        "Resource": "*"
+      },
+      { "Sid": "Eks", "Effect": "Allow",
+        "Action": ["eks:*","iam:CreateOpenIDConnectProvider","iam:DeleteOpenIDConnectProvider","iam:CreateRole","iam:AttachRolePolicy","iam:PutRolePolicy","iam:DeleteRolePolicy","iam:DeleteRole","iam:TagRole"],
+        "Resource": "*"
+      },
+      { "Sid": "LogsKms", "Effect": "Allow",
+        "Action": ["logs:*","kms:*","cloudwatch:*"],
+        "Resource": "*"
+      }
+    ]
+  }
+  
