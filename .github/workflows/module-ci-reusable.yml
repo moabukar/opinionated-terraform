@@ -11,7 +11,7 @@ jobs:
   module-ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: hashicorp/setup-terraform@v3
         with: { terraform_version: "1.9.5" }
       - name: Install tooling
