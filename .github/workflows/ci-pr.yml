@@ -131,7 +131,7 @@ jobs:
         with:
           terraform_version: "1.9.5"
       - name: Configure AWS (OIDC plan-role)
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: arn:aws:iam::${{ vars.AWS_ACCOUNT_ID }}:role/github-oidc-plan-role
           role-session-name: gha-plan
