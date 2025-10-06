@@ -36,7 +36,7 @@ jobs:
           echo "exitcode=$?" >> $GITHUB_OUTPUT
       - name: Open/Update issue if drift
         if: steps.plan.outputs.exitcode == '2'
-        uses: peter-evans/create-issue-from-file@v5
+        uses: peter-evans/create-issue-from-file@v6
         with:
           title: "Drift detected in ${{ matrix.env }}"
           content-filepath: stacks/${{ matrix.env }}/plan.out
