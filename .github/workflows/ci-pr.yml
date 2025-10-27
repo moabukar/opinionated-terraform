@@ -145,7 +145,7 @@ jobs:
           terraform validate
           terraform plan -input=false -out=plan.out
       - name: Upload plan
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: plan-${{ matrix.envs }}
           path: stacks/${{ matrix.envs }}/plan.out
