@@ -18,7 +18,7 @@ jobs:
         env: [dev, staging, prod]
     steps:
       - uses: actions/checkout@v5
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
         with: { terraform_version: "1.9.5" }
       - name: Configure AWS
         uses: aws-actions/configure-aws-credentials@v5
